@@ -12,3 +12,5 @@ users/migrations
 products/migrations
 db.sqlite3
 staticfiles
+.DS_Store
+*.swp
