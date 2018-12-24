@@ -146,7 +146,7 @@ def display_favorites(request, user_name):
     form = SearchBar()
     products = Product.objects.filter(user__first_name=user_name)
     return render(request,
-                  'products/favorites.html',
+                  'products/index.html',
                   {
                       'results': products,
                       'form': form,
