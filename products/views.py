@@ -45,20 +45,19 @@ def search_products(request):
 def display_results(request, data):
     form = SearchBar()
     open_food = OpenFoodAPI()
-
-    results = []
+    results = False
 
     product = Product.objects.filter(name__contains=data)
     # if i find the asked product in base
+
     if product:
-        log.critical(f"PRODUCT[0] {product[0]}")
         # i first try to find 6 better products in base
         results = Product.objects.six_better_products(product[0])
-        log.critical(f"RESULTS {results}")
-        try:
+        if results:
             results[:] = [model_to_dict(x) for x in results]
-        except TypeError:
-            results = open_food.return_six_healthy_prods(data)
+    # if database search failed, make an API request.
+    if not results:
+        results = open_food.return_six_healthy_prods(data)
 
     searched_prod = open_food.search_product(data)
 
@@ -67,7 +66,6 @@ def display_results(request, data):
             result.update({'is_favorite': True})
         else:
             result.update({'is_favorite': False})
-
 
     if searched_prod:
         return render(request, 'products/results.html', {
@@ -146,7 +144,7 @@ def display_favorites(request, user_name):
     form = SearchBar()
     products = Product.objects.filter(user__first_name=user_name)
     return render(request,
-                  'products/index.html',
+                  'products/favorites.html',
                   {
                       'results': products,
                       'form': form,

@@ -4,9 +4,10 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 
-from .forms import RegisterForm, LoginForm, PasswordResetForm, NewPasswordForm
+from .forms import RegisterForm, LoginForm, PasswordResetForm, NewPasswordForm, ChangePasswordForm
 from products.forms import SearchBar
 from .models import CustomUser, ResetLink
 
@@ -31,7 +32,6 @@ def login_view(request):
             user = authenticate(username=email, password=password)
             if user and user.first_name:
                 login(request, user)
-                form = SearchBar()
                 return render(request, 'products/index.html', locals())
             else:
                 error = True
@@ -81,6 +81,7 @@ def profile(request, username='superuser'):
     else:
         raise Http404
 
+
 def reset_password(request):
     form = SearchBar()
     password_reset_form = PasswordResetForm(request.POST or None)
@@ -95,8 +96,7 @@ def reset_password(request):
                       f"lien unique pour changer le mot de passe : <a href='http://127.0.0.1:8000/user/{link.link_id}'> LIEN <\\a>",
                       'from@exempale.com',
                       [user.email],
-                      fail_silently=False,
-            )
+                      fail_silently=False,)
             form_validated = True
         except ObjectDoesNotExist:
             form_validated = True
@@ -107,6 +107,7 @@ def reset_password(request):
         'form_validated': form_validated,
     })
 
+
 def type_new_password(request, link_id):
     form = SearchBar()
     new_password_form = NewPasswordForm(request.POST or None)
@@ -115,9 +116,8 @@ def type_new_password(request, link_id):
 
     link = get_object_or_404(ResetLink, link_id=link_id)
     user = CustomUser.objects.get(id=link.user_id)
-    log.critical(f"UTILISATEUR: {user.first_name}")
 
-    if new_password_form.is_valid():
+    if new_password_form.is_valid() and link.expiration_date > timezone.now():
         if new_password_form.cleaned_data['password'] == new_password_form.cleaned_data['password_check']:
             user.set_password(new_password_form.cleaned_data['password'])
             user.save()
@@ -126,12 +126,42 @@ def type_new_password(request, link_id):
         else:
             password_dont_match = True
 
-
-
     return render(request, 'users/type_new_password.html',{
         'form': form,
         'new_password_form': new_password_form,
         'dont_match': password_dont_match,
         'password_updated': password_updated,
         'link_id': link_id,
+    })
+
+
+def change_password(request):
+    form = SearchBar()
+    change_password_form = ChangePasswordForm(request.POST or None)
+    password_dont_match = False
+    password_updated = False
+    wrong_password = False
+
+    if change_password_form.is_valid():
+        old_password = change_password_form.cleaned_data['old_password']
+        password_1 = change_password_form.cleaned_data['password']
+        password_2 = change_password_form.cleaned_data['password_check']
+
+        if request.user.check_password(old_password):
+            if password_1 == password_2:
+                user = CustomUser.objects.get(id=request.user.id)
+                user.set_password(password_1)
+                user.save()
+                password_updated = True
+            else:
+                password_dont_match = True
+        else:
+            wrong_password = True
+
+    return render(request, 'users/change_password_form.html', {
+        'form': form,
+        'change_password_form': change_password_form,
+        'password_dont_match': password_dont_match,
+        'password_updated': password_updated,
+        'wrong_password': wrong_password,
     })

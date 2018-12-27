@@ -1,9 +1,12 @@
 from django.test import TestCase
+from django.test import Client
+from django.urls import reverse
 
 from products.openfoodapi import OpenFoodAPI
 from products.management.commands import _open_food_facts as off
-from products.models import Product, Category
+from products.models import Product
 from users.models import CustomUser
+
 import logging
 log = logging.getLogger(__name__)
 
@@ -40,6 +43,8 @@ class IndexTests(TestCase):
             external_link=self.test_product['url']
         ).save()
 
+        self.client = Client()
+
     def test_dict_has_required_key(self):
         self.assertTrue(OpenFoodAPI().check_has_needed_infos(self.test_product))
 
@@ -72,5 +77,12 @@ class IndexTests(TestCase):
         user.products.add(Product.objects.get(id='123'))
 
         self.assertEqual(user.products.get(id="123"), Product.objects.get(id='123'))
+
+    def test_check_favorites_template(self):
+        url = reverse('display_favorites', args=['first name test'])
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, 'products/favorites.html')
+
+
 
 

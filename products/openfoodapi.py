@@ -6,7 +6,7 @@ from itertools import product as cartesian_product
 log = logging.getLogger(__name__)
 
 
-class OpenFoodAPI():
+class OpenFoodAPI:
 
     def __init__(self):
         pass

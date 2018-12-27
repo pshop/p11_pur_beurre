@@ -83,11 +83,11 @@ WSGI_APPLICATION = 'pur_beurre_v2.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'pur_beurre',
+        'NAME': 'pur_beurre_p11',
         'USER': 'pur_beurre_admin',
         'PASSWORD': 'dev',
         'HOST': 'localhost',
-        'PORT': '5432',\
+        'PORT': '5432',
     }
 }
 
