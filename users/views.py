@@ -142,7 +142,10 @@ def change_password(request):
     password_updated = False
     wrong_password = False
 
-    if change_password_form.is_valid():
+    if not request.user.is_authenticated:
+        raise Http404
+
+    if change_password_form.is_valid() :
         old_password = change_password_form.cleaned_data['old_password']
         password_1 = change_password_form.cleaned_data['password']
         password_2 = change_password_form.cleaned_data['password_check']
@@ -165,3 +168,5 @@ def change_password(request):
         'password_updated': password_updated,
         'wrong_password': wrong_password,
     })
+
+

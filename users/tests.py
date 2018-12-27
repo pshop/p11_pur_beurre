@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.core import mail
+from django.urls import reverse
 
 import logging
 
@@ -78,10 +79,18 @@ class IndexTests(TestCase):
     # password change
 
     def test_change_password_link_logged_used(self):
+        self.client.login(username='mail@gmail.com', password='motdepasse')
         response = self.client.get('/user/change_password/')
         self.assertEqual(response.status_code, 200)
+
 
     def test_change_password_link_no_user_logged(self):
         self.client.logout()
         response = self.client.get('/user/change_password/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 404)
+
+    def test_change_password_template(self):
+        self.client.login(username='mail@gmail.com', password='motdepasse')
+        url = reverse('change_password')
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, 'users/change_password_form.html')
